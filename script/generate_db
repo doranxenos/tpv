@@ -1,0 +1,78 @@
+PICS_DIR = "..#{File::SEPARATOR}tiffs"
+PNG_DIR = "..#{File::SEPARATOR}pics"
+JS_DIR = "..#{File::SEPARATOR}js"
+PIC_FILE = /^.*?\.tif{1,2}$/i
+PIC_NAME_COMPONENTS = [ "date", "mutant", "type", "magnification" ]
+
+require 'rubygems'
+require 'RMagick'
+
+
+#
+# Returns a JSON formatted entry by pulling attributes from the passed tiffs name
+#
+def generate_db_entry(pic_name)
+  entry = "{ "
+  pic_name = pic_name.split(File::SEPARATOR).last.gsub(".tif", "")
+
+  components = pic_name.split("-")
+
+  if components.length != PIC_NAME_COMPONENTS.length
+    raise "Unsupported picture name: #{pic_name}"
+  end
+  
+  PIC_NAME_COMPONENTS.each_index do |i|
+    entry += ", " unless i == 0
+    entry += "\"#{PIC_NAME_COMPONENTS[i]}\": \"#{components[i]}\""
+  end
+
+  entry += " }"
+
+  return entry
+end
+
+#
+# Creates a png copy of the tiff passed and a smaller png thumbnail
+#
+def convert_pic(pic_name)
+  img = Magick::Image::read(pic_name).first
+
+  pic_name = pic_name.split(File::SEPARATOR).last.gsub(".tif", "")
+
+  print "Generating PNG: #{pic_name+".png"}..."
+  img.write PNG_DIR + File::SEPARATOR + pic_name + ".png"
+  print "done\n"
+  print "Generating PNG Thumbnail: #{pic_name+"__thumb.png"}..."
+  img.scale(0.25).write PNG_DIR + File::SEPARATOR + pic_name + "__thumb.png"
+  print "done\n"
+end
+
+#
+# Main Execution
+#
+db_json = "[\n"
+
+Dir::entries(PICS_DIR).each do |f|
+  if PIC_FILE.match(f)
+    print "Found file: #{f}\n"
+    convert_pic(PICS_DIR + File::SEPARATOR + f)
+
+    db_json << ",\n" unless db_json == "[ "
+    db_json << generate_db_entry(PICS_DIR + File::SEPARATOR + f) 
+  end
+end
+
+db_json += "\n]"
+
+js_path = JS_DIR + File::SEPARATOR + "PicDB.js"
+if File::exist? js_path
+  print "Deleting old PicDB.js..."
+  File::delete js_path
+  print "done\n"
+end
+
+print "Writing PicDB.js..."
+pic_db_file = File::open(js_path, "w") 
+pic_db_file << db_json
+pic_db_file.close
+print "done\n"
