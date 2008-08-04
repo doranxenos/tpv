@@ -6,8 +6,6 @@ var TPV = {
   init: function() {
     TPV._queryBuilder = new QueryBuilder();
 
-    TPV.build_results_summary(TPV.show_thumbs());
-
     $('#searchBox').bind('focus', function() {
       if($('#searchBox').attr('value') == 'Search Pictures...') {
         $('#searchBox').attr('value', '');
@@ -22,11 +20,21 @@ var TPV = {
 
     $('#searchBox').bind('keydown', function(e) {
       if(e.which == 13) {
-        TPV.clear_thumbs();
-        TPV._queryBuilder.set($('#searchBox').attr('value'));
-        TPV.build_results_summary(TPV.show_thumbs(TPV._queryBuilder.get()));
+        TPV.execute_search();
       }
     });
+
+    TPV.execute_search();
+  },
+
+  execute_search: function() {
+    TPV.clear_thumbs();
+    var query = $('#searchBox').attr('value');
+    if(query == 'Search Pictures...')
+      query = '';
+
+    TPV._queryBuilder.set(query);
+    TPV.build_results_summary(TPV.show_thumbs(TPV._queryBuilder.get()));
   },
 
   build_results_summary: function(resultCnt) {
@@ -101,27 +109,31 @@ var TPV = {
         case 0.5:
           dbEntry.__pic.__pic.__size = 0.75;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75%.png";
+          ttlbar.children()[0].childNodes[0].src = 'smaller.gif';
           span.html('75%');
           break;
         case 0.75:
           dbEntry.__pic.__pic.__size = 1.0;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + ".png";
           span.html('100%');
+          ttlbar.children()[0].childNodes[1].src = 'bigger_disabled.gif';
           break;
       }
     });
 
-    var smallLink = $(new Image()).attr('src', 'smaller.gif').bind('click', function() {
+    var smallLink = $(new Image()).attr('src', 'smaller_disabled.gif').bind('click', function() {
       var s = dbEntry.__pic.__pic.__size;
       switch(s) {
         case 1.0:
           dbEntry.__pic.__pic.__size = 0.75;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75%.png";
+          ttlbar.children()[0].childNodes[1].src = 'bigger.gif';
           span.html('75%');
           break;
         case 0.75:
           dbEntry.__pic.__pic.__size = 0.5;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__50%.png";
+          ttlbar.children()[0].childNodes[0].src = 'smaller_disabled.gif';
           span.html('50%');
           break;
       }
@@ -151,6 +163,8 @@ var TPV = {
 
     div.append(ttlbar);
     div.append(div.__pic);
+
+    div.css({'top': Number(window.scrollY + 80)+'px'});
 
     $(document.body).append(div);
     div.draggable();

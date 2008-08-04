@@ -14,20 +14,23 @@ QueryBuilder.prototype = {
   },
 
   parse: function(queryString) {
-    var components = queryString.split(/\s/g);
-
+    queryString = queryString ? queryString : null;
     var query = {};
 
-    var l = components.length;
-    for(var i=0; i<l; i++) {
-      if(components[i].indexOf(":") > -1) {
-        var kv = components[i].split(":");
-        var k = kv[0];
-        kv.splice(0,1);
-        query[k] =  kv.join(":");
+    if(queryString) {
+      var components = queryString.split(/\s/g);
 
-      } else {
-        query[components[i]] = true;
+      var l = components.length;
+      for(var i=0; i<l; i++) {
+        if(components[i].indexOf(":") > -1) {
+          var kv = components[i].split(":");
+          var k = kv[0];
+          kv.splice(0,1);
+          query[k] =  kv.join(":");
+
+        } else {
+          query[components[i]] = true;
+        }
       }
     }
 
