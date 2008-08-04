@@ -1,10 +1,51 @@
+a { color:black; }
+
+#header {
+  padding:0px;
+  background-color:#fff;
+  width:100%;
+  position:fixed;
+  top:0px;
+  left:0px;
+  z-index:1000000000;
+}
+
+#header label {
+  font:bold 12px Arial, sans-serif;
+  color:#888;
+  padding-left:10px;
+}
+
+#tooltip {
+  position: absolute;
+  z-index: 3000;
+  border: 1px solid #111;
+  background-color: #eee;
+  padding: 5px;
+  opacity: 0.85;
+}
+#tooltip h3, #tooltip div { margin: 0; }
+
+#searchBox {
+  width: 240px;
+  margin:10px 10px 10px 0px;
+}
+
+#resultSummary {
+  border-top:1px solid #2067a9;
+  background-color: #88b2d9;
+  padding:3px 8px;
+  text-align: right;
+  font-size:12px;
+}
+
 #content {
-  margin:20px;
+  margin:60px 10px 10px 10px;
 }
 
 #content .thumb {
   padding:10px;
-	margin:5px;
+  margin:5px;
 }
 
 #content .selected {
@@ -12,10 +53,22 @@
 }
 
 .floating_pic {
-  border:4px solid #888;
-  background-color:#aaa;
+  border:2px solid #2067a9;
   position:absolute;
-  padding:5px;
   left:10px;
-	top:80px;
+  top:80px;
+  cursor:move;
+}
+
+.floating_ttl {
+  border-bottom:2px solid #2067a9;
+  background: #88b2d9;
+  padding:2px 6px;
+  font-size: 10pt;
+  height:16px;
+  text-align:center;
+}
+
+.floating_ttl a, .floating_ttl img {
+  cursor:pointer;
 }
