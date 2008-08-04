@@ -26,6 +26,8 @@ def generate_db_entry(pic_name)
     entry += "\"#{PIC_NAME_COMPONENTS[i]}\": \"#{components[i]}\""
   end
 
+  entry << ", \"src\": \"#{pic_name}\""
+
   entry += " }"
 
   return entry
@@ -50,19 +52,19 @@ end
 #
 # Main Execution
 #
-db_json = "[\n"
+db_json = "TPV.db = [\n"
 
 Dir::entries(PICS_DIR).each do |f|
   if PIC_FILE.match(f)
     print "Found file: #{f}\n"
     convert_pic(PICS_DIR + File::SEPARATOR + f)
 
-    db_json << ",\n" unless db_json == "[ "
+    db_json << ",\n" unless db_json == "TPV.db = [\n"
     db_json << generate_db_entry(PICS_DIR + File::SEPARATOR + f) 
   end
 end
 
-db_json += "\n]"
+db_json += "\n];"
 
 js_path = JS_DIR + File::SEPARATOR + "PicDB.js"
 if File::exist? js_path
