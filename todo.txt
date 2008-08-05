@@ -1,0 +1,4 @@
+Change the way search works to make it not require name:value, just value across all fields
+Pagination, 20 per page
+date-strain-type-#-mag.tif
+titles on thumbs and on popup pic
