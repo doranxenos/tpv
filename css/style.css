@@ -1,4 +1,5 @@
 a { color:black; }
+h5 { font:bold 13px Arial, sans-serif; }
 
 #header {
   padding:0px;
@@ -49,6 +50,7 @@ a { color:black; }
 #content .thumb {
   padding:10px;
   margin:5px;
+	font:bold 13px Arial,sans-serif;
 }
 
 #content .selected {
@@ -75,4 +77,12 @@ a { color:black; }
 
 .floating_ttl a, .floating_ttl img {
   cursor:pointer;
+}
+
+#pageNavigation {
+  font-size:14px;
+}
+
+#pageNavigation a {
+  margin-right:10px;
 }

@@ -2,6 +2,8 @@ var TPV = {
 
   __zIndex: 0,
   _queryBuilder: null,
+	_pageSize: 4,
+	_currentPage: 0,
 
   init: function() {
     TPV._queryBuilder = new QueryBuilder();
@@ -24,62 +26,161 @@ var TPV = {
       }
     });
 
-    TPV.execute_search();
+    TPV.execute_search(0);
   },
 
-  execute_search: function() {
+  execute_search: function(page) {
+		page = page ? page : 0;
     TPV.clear_thumbs();
     var query = $('#searchBox').attr('value');
     if(query == 'Search Pictures...')
       query = '';
 
-    TPV._queryBuilder.set(query);
-    TPV.build_results_summary(TPV.show_thumbs(TPV._queryBuilder.get()));
+    var qArr = query.split(/\s+/);
+		if(qArr.length == 1 && qArr[0] == "")
+			qArr = [];
+
+		var toRemove = [];
+		for(var i=0; i<qArr.length; i++) {
+			if(qArr[i].match(/^\s*$/))
+				 toRemove.push(i);
+		}
+		for(i=0; i<toRemove.length; i++)
+			qArr.splice(toRemove[i] - i, 1);
+
+    TPV.build_results_summary.apply(this, TPV.show_thumbs(qArr, page));
   },
 
-  build_results_summary: function(resultCnt) {
-    $('#resultSummary').html("Found <strong>"+ resultCnt +"</strong> Picture(s)");
+  build_results_summary: function(resultCnt, page) {
+		page = page ? page : 0;
+		var start = page ? page * TPV._pageSize + 1 : 1;
+		var end = start - 1 + TPV._pageSize;
+
+		if(end > resultCnt)
+			end = resultCnt;
+
+    $('#resultSummary').html("Showing <strong>"+ start +"-"+ end +"</strong> of <strong>"+ resultCnt +"</strong> matching Picture(s)");
   },
 
-  show_thumbs: function(query) {
-    query = query ? query : {};
+  show_thumbs: function(query, page) {
+    query = query ? query : [];
+		page = page ? page : 0;
 
-    var matchCnt = 0;
+		if(page == 0) {
 
-    var l = TPV.db.length;
-    for(var i=0; i<l; i++) {
-      var match = true;
-      for(var k in query) {
-        if(TPV.db[i][k] == null || TPV.db[i][k] != query[k]) {
-          match = false;
-          break;
-        }
-      }
+			var matchCnt = 0;
 
-      if(match) {
-        TPV.append_thumb(TPV.db[i]);
-        matchCnt++;
-      }
-    }
+			TPV._matches = [];
+			TPV._currentPage = 0;
 
-    return matchCnt;
+			var l = TPV.db.length;
+			for(var i=0; i<l; i++) {
+				var match = 0;
+
+				for(var k in TPV.db[i]) {
+
+					var value = String(TPV.db[i][k]).toLowerCase();
+
+					for(var j=0; j<query.length; j++) {
+						if(value == String(query[j]).toLowerCase()) {
+							match++;
+						}
+					}
+				}
+
+				if(match >= query.length) {
+					TPV._matches.push(TPV.db[i]);
+					matchCnt++;
+				}
+			}
+
+			l = TPV._matches.length > TPV._pageSize ? TPV._pageSize : TPV._matches.length;
+
+			for(i=0; i<l; i++) {
+				TPV.append_thumb(TPV._matches[i]);
+			}
+
+			if(TPV._matches.length > TPV._pageSize)
+				TPV.show_next_page_link();
+
+			return [matchCnt, page];
+
+		} else {
+			var thumbCnt = TPV._pageSize;
+			if(page * TPV._pageSize + thumbCnt > TPV._matches.length)
+				thumbCnt = TPV._matches.length - page * TPV._pageSize;
+
+			for(var i=page * TPV._pageSize; i<page * TPV._pageSize + thumbCnt; i++) {
+				TPV.append_thumb(TPV._matches[i]);
+			}
+
+			TPV.show_prev_page_link();
+
+			if(TPV._matches.length >  (page+1) * TPV._pageSize)
+				TPV.show_next_page_link();
+
+			return [TPV._matches.length, page];
+		}
   },
+
+	show_next_page_link: function() {
+		var div;
+
+		if($('#pageNavigation').length == 0) {
+			div = $(document.createElement('div')).css('clear', 'both').attr('id', 'pageNavigation');
+			$('#content').append(div);
+		} else {
+			div = $('#pageNavigation');
+		}
+
+		var np;
+		if($('#nextPage').length == 0) {
+			np = $(document.createElement('a')).attr('href', '#').html("Next Page").bind('click', function() {
+				TPV.execute_search(++TPV._currentPage);
+			});
+			div.append(np);
+		}
+	},
+
+	show_prev_page_link: function() {
+		var div;
+
+		if($('#pageNavigation').length == 0) {
+			div = $(document.createElement('div')).css('clear', 'both').attr('id', 'pageNavigation');
+			$('#content').append(div);
+		} else {
+			div = $('#pageNavigation');
+		}
+
+		var pp;
+		if($('#prevPage').length == 0) {
+			pp = $(document.createElement('a')).attr('href', '#').html("Previous Page").bind('click', function() {
+				TPV.execute_search(--TPV._currentPage);
+			});
+			div.append(pp);
+		}
+	},
 
   clear_thumbs: function() {
     $('#content').empty();
   },
 
   append_thumb: function(dbEntry) {
+		var div = $(document.createElement('div')).css('float', 'left');
     var thumb = new Image();
     thumb.src = "pics/"+ dbEntry.src +"__thumb.png";
-    thumb.title = dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification;
-    $(thumb).addClass("thumb");
-    $(thumb).tooltip({ showURL: false, fixPNG: true });
-    $('#content').append($(thumb));
+    div.addClass("thumb");
 
-    dbEntry.__thumb = $(thumb);
+		var ttl = $(document.createElement('div'));
+		ttl.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification);
 
-    $(thumb).bind('click', function(e) {
+		div.append(ttl);
+		div.append(thumb);
+    $('#content').append(div);
+
+    dbEntry.__thumb = div;
+
+    div.bind('click', function(e) {
       if($(this).hasClass('selected')) {
         TPV.hide_pic(dbEntry);
 
@@ -101,7 +202,7 @@ var TPV = {
     ttlbar.addClass('floating_ttl');
     ttlbar.css({'height': '16px'});
 
-    var span = $(document.createElement('div')).html('50%');
+    var span = $(document.createElement('div')).html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification +' (50%)');
 
     var bigLink = $(new Image()).attr('src', 'bigger.gif').bind('click', function() {
       var s = dbEntry.__pic.__pic.__size;
@@ -110,12 +211,12 @@ var TPV = {
           dbEntry.__pic.__pic.__size = 0.75;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75%.png";
           ttlbar.children()[0].childNodes[0].src = 'smaller.gif';
-          span.html('75%');
+          span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (75%)');
           break;
         case 0.75:
           dbEntry.__pic.__pic.__size = 1.0;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + ".png";
-          span.html('100%');
+          span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (100%)');
           ttlbar.children()[0].childNodes[1].src = 'bigger_disabled.gif';
           break;
       }
@@ -128,19 +229,19 @@ var TPV = {
           dbEntry.__pic.__pic.__size = 0.75;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75%.png";
           ttlbar.children()[0].childNodes[1].src = 'bigger.gif';
-          span.html('75%');
+          span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (75%)');
           break;
         case 0.75:
           dbEntry.__pic.__pic.__size = 0.5;
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__50%.png";
           ttlbar.children()[0].childNodes[0].src = 'smaller_disabled.gif';
-          span.html('50%');
+          span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (50%)');
           break;
       }
     });
 
     var closeLink = $(new Image()).attr('src', 'close.gif').bind('click', function() {
-      TPV.hide_pic(dbEntry);
+			setTimeout(function() { TPV.hide_pic(dbEntry); }, 10);
     });;
 
     var sizeWrapper = $(document.createElement('div'));

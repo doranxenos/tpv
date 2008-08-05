@@ -2,7 +2,7 @@ PICS_DIR = "..#{File::SEPARATOR}tiffs"
 PNG_DIR = "..#{File::SEPARATOR}pics"
 JS_DIR = "..#{File::SEPARATOR}js"
 PIC_FILE = /^.*?\.tif{1,2}$/i
-PIC_NAME_COMPONENTS = [ "date", "mutant", "type", "magnification" ]
+PIC_NAME_COMPONENTS = [ "date", "mutant", "type", "number", "magnification" ]
 
 require 'rubygems'
 require 'RMagick'
