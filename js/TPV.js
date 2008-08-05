@@ -2,7 +2,7 @@ var TPV = {
 
   __zIndex: 0,
   _queryBuilder: null,
-	_pageSize: 4,
+	_pageSize: 20,
 	_currentPage: 0,
 
   init: function() {
