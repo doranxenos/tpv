@@ -2,7 +2,7 @@ PICS_DIR = "..#{File::SEPARATOR}tiffs"
 PNG_DIR = "..#{File::SEPARATOR}pics"
 JS_DIR = "..#{File::SEPARATOR}js"
 PIC_FILE = /^.*?\.tif{1,2}$/i
-PIC_NAME_COMPONENTS = [ "date", "mutant", "type", "number", "magnification" ]
+PIC_NAME_COMPONENTS = [ "date", "mutant", "type", "number", "magnification", "number2" ]
 
 require 'rubygems'
 require 'RMagick'
@@ -15,7 +15,7 @@ def generate_db_entry(pic_name)
   entry = "{ "
   pic_name = pic_name.split(File::SEPARATOR).last.gsub(".tif", "")
 
-  components = pic_name.split("-")
+  components = pic_name.split(/[-|_]{1}/)
 
   if components.length != PIC_NAME_COMPONENTS.length
     raise "Unsupported picture name: #{pic_name}"
@@ -47,27 +47,35 @@ def convert_pic(pic_name)
   print "Generating Thumbnail: #{pic_name+"__thumb.png"}..."
   img.scale(0.25).write PNG_DIR + File::SEPARATOR + pic_name + "__thumb.png"
   print "done\n"
-  print "Generating %50 size PNG: #{pic_name+"__50%.png"}..."
-  img.scale(0.5).write PNG_DIR + File::SEPARATOR + pic_name + "__50%.png"
+  print "Generating %50 size PNG: #{pic_name+"__50.png"}..."
+  img.scale(0.5).write PNG_DIR + File::SEPARATOR + pic_name + "__50.png"
   print "done\n"
-  print "Generating %75 size PNG: #{pic_name+"__75%.png"}..."
-  img.scale(0.75).write PNG_DIR + File::SEPARATOR + pic_name + "__75%.png"
+  print "Generating %75 size PNG: #{pic_name+"__75.png"}..."
+  img.scale(0.75).write PNG_DIR + File::SEPARATOR + pic_name + "__75.png"
   print "done\n"
+end
+
+def add_tifs_in_dir(dir)
+  entries = []
+
+  Dir::entries(dir).each do |f|
+    if PIC_FILE.match(f)
+      print "Found file: #{f}\n"
+      convert_pic(dir + File::SEPARATOR + f)
+      entries.push(generate_db_entry(dir + File::SEPARATOR + f))
+    elsif File::directory?(dir + File::SEPARATOR + f) and f != "." and f != ".."
+      entries.concat(add_tifs_in_dir(dir + File::SEPARATOR + f))
+    end
+  end
+
+  return entries
 end
 
 #
 # Main Execution
 #
 db_json = "TPV.db = [\n"
-entries = []
-
-Dir::entries(PICS_DIR).each do |f|
-  if PIC_FILE.match(f)
-    print "Found file: #{f}\n"
-    convert_pic(PICS_DIR + File::SEPARATOR + f)
-    entries.push(generate_db_entry(PICS_DIR + File::SEPARATOR + f))
-  end
-end
+entries = add_tifs_in_dir(PICS_DIR)
 
 # Sorting is done on magnification here to save in browser processing time
 # somewhat fragile...

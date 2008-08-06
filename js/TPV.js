@@ -197,6 +197,7 @@ var TPV = {
     var div = $(document.createElement('div'));
     div.addClass('floating_pic');
     div.css('zIndex', TPV.__zIndex++);
+		div.css('width', '512px');
 
     var ttlbar = $(document.createElement('div'));
     ttlbar.addClass('floating_ttl');
@@ -209,13 +210,19 @@ var TPV = {
       switch(s) {
         case 0.5:
           dbEntry.__pic.__pic.__size = 0.75;
-          dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75%.png";
+					div.css('width', '768px');
+          dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75.png";
+				  dbEntry.__pic.__pic.width = '768';
+					dbEntry.__pic.__pic.height = '888';
           ttlbar.children()[0].childNodes[0].src = 'smaller.gif';
           span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (75%)');
           break;
         case 0.75:
           dbEntry.__pic.__pic.__size = 1.0;
+					div.css('width', '1024px');
           dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + ".png";
+					dbEntry.__pic.__pic.width = '1024';
+					dbEntry.__pic.__pic.height = '1184';
           span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (100%)');
           ttlbar.children()[0].childNodes[1].src = 'bigger_disabled.gif';
           break;
@@ -227,13 +234,19 @@ var TPV = {
       switch(s) {
         case 1.0:
           dbEntry.__pic.__pic.__size = 0.75;
-          dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75%.png";
+					div.css('width', '768px');
+          dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__75.png";
+					dbEntry.__pic.__pic.width = '768';
+					dbEntry.__pic.__pic.height = '888';
           ttlbar.children()[0].childNodes[1].src = 'bigger.gif';
           span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (75%)');
           break;
         case 0.75:
           dbEntry.__pic.__pic.__size = 0.5;
-          dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__50%.png";
+					div.css('width', '512px');
+          dbEntry.__pic.__pic.src = "pics/" + dbEntry.src + "__50.png";
+					dbEntry.__pic.__pic.width = '512';
+					dbEntry.__pic.__pic.height = '592';
           ttlbar.children()[0].childNodes[0].src = 'smaller_disabled.gif';
           span.html(dbEntry.mutant + " " + dbEntry.type + " at " + dbEntry.magnification+' (50%)');
           break;
@@ -259,13 +272,13 @@ var TPV = {
     });
 
     div.__pic = new Image();
-    div.__pic.src = "pics/" + dbEntry.src + "__50%.png";
+    div.__pic.src = "pics/" + dbEntry.src + "__50.png";
     div.__pic.__size = 0.5;
 
     div.append(ttlbar);
     div.append(div.__pic);
 
-    div.css({'top': Number(window.scrollY + 80)+'px'});
+    div.css({'top': Number(document.body.parentNode.scrollTop + 80)+'px'});
 
     $(document.body).append(div);
     div.draggable();
